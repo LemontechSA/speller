@@ -29,3 +29,6 @@ group :test do
   # Coverage report, opt-in with COVERAGE=1 (see test/test_helper.rb)
   gem 'simplecov', '~> 1.3', require: false
 end
+
+gem 'newrelic_rpm'
+gem "sentry-ruby"

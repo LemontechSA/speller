@@ -1,4 +1,6 @@
 require 'sinatra/base'
+# Must come after Sinatra so the agent instruments Sinatra::Base
+require 'newrelic_rpm'
 require 'ffi/aspell'
 require 'json'
 

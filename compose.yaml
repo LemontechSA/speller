@@ -14,5 +14,9 @@ services:
       - "3019:3019"
     environment:
       RACK_ENV: development
+      # Taken from the host shell or from .env (gitignored). Without them
+      # New Relic and Sentry report nothing.
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     volumes:
       - .:/app
