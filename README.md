@@ -1,4 +1,4 @@
-## Speller
+# Speller
 
 A small sinatra application who provides a text spellcheck service.
 
@@ -68,7 +68,7 @@ podman compose run --rm -e COVERAGE=1 speller bundle exec rake test
 GitHub Actions runs the suite with coverage on every pull request and on
 pushes to `master` (`.github/workflows/testing.yml`).
 
-## Endpoints
+## Endpoints
 
 To consume the service, you could post ```[ROOT_URL]/spell``` endpoint, with the following params:
 
@@ -80,7 +80,6 @@ So, a full request could be:
 ```[ROOT_URL]/spell?lang=en&text=Bla%20Bla%20Bla%20Bla```
 
 The response will be an array of possible suggestions:
-
 
 ```
 #!json
