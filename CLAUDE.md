@@ -35,7 +35,7 @@ podman compose run --rm -e COVERAGE=1 speller bundle exec rake test             
 
 Coverage is opt-in (`COVERAGE=1`, as in timeflow). SimpleCov 1.x starts at the top of `test/test_helper.rb`, before `speller.rb` is required, and only covers `speller.rb` (`cover`; 1.x deprecates `track_files`/`add_filter`). `coverage/` is gitignored.
 
-CI: `.github/workflows/testing.yml` runs on every PR and on push to `master`. It installs Aspell and the dictionaries with apt, uses `ruby/setup-ruby` (version from `.ruby-version`), runs the suite with `COVERAGE=1`, writes line coverage to the job summary and uploads `coverage/` as an artifact (with `.resultset.json`). SonarQube isn't set up yet because the project doesn't exist; the workflow has a TODO where the scan goes.
+CI: `.github/workflows/testing.yml` runs on every PR and on push to `master`. It installs Aspell and the dictionaries with apt, uses `ruby/setup-ruby` (version from `.ruby-version`), runs the suite with `COVERAGE=1`, writes line coverage to the job summary, runs SonarQube with `LemontechSA/action-sonarqube-scan@v1.0` (same as tbx-api-gateway and wario; `vars.SONAR_HOST_URL` and `secrets.SONAR_TOKEN` come from the org) and uploads `coverage/` as an artifact (with `.resultset.json`). The action sets the project key `LemontechSA_speller` from the repo name and scans PRs and pushes to `master`. `sonar-project.properties` lists the sources explicitly (`speller.rb`, `config.ru`) because `ruby/setup-ruby` puts gems in `vendor/bundle` and `coverage/` holds SimpleCov's HTML. Checkout uses `fetch-depth: 0` so Sonar can detect new code. v1.0 runs the scanner on the runner, so `.resultset.json` paths need no `sed` rewrite (that was for v0.1, which ran in Docker).
 
 There is no linter config.
 

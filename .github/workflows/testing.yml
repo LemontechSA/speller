@@ -16,8 +16,11 @@ jobs:
       # rerun, ruby-lsp and debug are only for the dev container
       BUNDLE_WITHOUT: development
     steps:
+      # Full history so SonarQube can blame lines and tell new code apart
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       # ffi-aspell loads libaspell at runtime and the suite checks against the
       # real es/en/pt_BR dictionaries, the same ones the Dockerfile installs.
@@ -43,9 +46,17 @@ jobs:
           echo "### Coverage" >> "$GITHUB_STEP_SUMMARY"
           echo "Line coverage: $(jq -r '.result.line' coverage/.last_run.json)%" >> "$GITHUB_STEP_SUMMARY"
 
-      # TODO SonarQube: once the project exists, fix the paths in
-      # coverage/.resultset.json (sed $GITHUB_WORKSPACE -> /github/workspace/)
-      # and run LemontechSA/action-sonarqube-scan, as in green-mario.
+      # Settings and the coverage report path are in sonar-project.properties.
+      # The action derives the project key (LemontechSA_speller) from the repo
+      # and scans PRs and pushes to master. v1.0 runs the scanner on the runner,
+      # not in Docker, so .resultset.json paths need no rewriting (green-mario's
+      # sed was for v0.1).
+      - name: SonarQube Scan
+        uses: LemontechSA/action-sonarqube-scan@v1.0
+        with:
+          url: ${{ vars.SONAR_HOST_URL }}
+          token: ${{ secrets.SONAR_TOKEN }}
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v7
         with:
