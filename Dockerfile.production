@@ -1,0 +1,33 @@
+# Production image. Dockerfile is the development one (rerun, Ruby LSP).
+FROM docker.io/library/ruby:4.0.9-slim AS builder
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends build-essential libaspell-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+ENV BUNDLE_WITHOUT=development:test \
+    BUNDLE_DEPLOYMENT=1
+COPY Gemfile Gemfile.lock .ruby-version ./
+RUN bundle install && rm -rf /usr/local/bundle/cache
+
+FROM docker.io/library/ruby:4.0.9-slim
+
+# ffi-aspell opens libaspell.so, which only the -dev package ships
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && apt-get install -y --no-install-recommends libaspell-dev aspell-en aspell-es aspell-pt-br \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --system --uid 10001 --home /app speller
+
+WORKDIR /app
+ENV RACK_ENV=production \
+    BUNDLE_WITHOUT=development:test \
+    BUNDLE_DEPLOYMENT=1
+COPY --from=builder /usr/local/bundle /usr/local/bundle
+COPY --from=builder /app/vendor /app/vendor
+COPY . .
+
+USER 10001
+EXPOSE 3019
+CMD ["bundle", "exec", "puma", "--bind", "tcp://0.0.0.0:3019", "--environment", "production"]

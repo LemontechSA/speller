@@ -78,6 +78,13 @@ class SpellerAppTest < Minitest::Test
     assert_nil last_response.headers['Access-Control-Allow-Origin']
   end
 
+  def test_health_answers_ok
+    get '/health'
+
+    assert last_response.ok?
+    assert_equal 'ok', last_response.body
+  end
+
   def test_get_is_not_routed
     get '/spell', text: 'hola', lang: 'es'
 

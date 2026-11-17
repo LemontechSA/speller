@@ -1,0 +1,62 @@
+name: deploy-production
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract image tag
+        run: echo "tag=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ECR_ROLE_ARN }}
+          role-session-name: GithubActionsSession
+          aws-region: us-east-1
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registries: ${{ secrets.ECR_ACCOUNT_ID }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.production
+          push: true
+          tags: |
+            ${{ vars.ECR_REGISTRY }}/lemontech/speller:${{ github.sha }}
+            ${{ vars.ECR_REGISTRY }}/lemontech/speller:build-${{ github.run_number }}
+            ${{ vars.ECR_REGISTRY }}/lemontech/speller:${{ env.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Connect to private network
+        uses: twingate/github-action@v1
+        with:
+          service-key: ${{ secrets.TWINGATE_SERVICE_KEY }}
+
+      - name: ArgoCD Sync
+        uses: LemontechSA/action-argocd-sync@v0.2
+        with:
+          server: ${{ vars.ARGOCD_SERVER }}
+          token: ${{ secrets.ARGOCD_TOKEN }}
+          app: speller
+          params: |-
+            image.tag=${{ github.sha }}

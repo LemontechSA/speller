@@ -40,6 +40,11 @@ class SpellerApp < Sinatra::Base
   options '/spell' do
     ''
   end
+
+  # Load balancer and Kubernetes probes
+  get '/health' do
+    'ok'
+  end
 end
 
 # A class used to use aspell to spellcheck a text
